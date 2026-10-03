@@ -13,10 +13,10 @@ export default function Home() {
   const messagesEndRef = useRef(null);
 
   /* ===== DATA MAHASISWA AKTIF ===== */
-  const student = {
-    nim: null,
-    nama: "Mahasiswa",
-  };
+const student = {
+  nim: "2301001",
+  nama: "Arif",
+};
 
   /* ===== SUGGESTION CHIPS ===== */
   const suggestions = [
