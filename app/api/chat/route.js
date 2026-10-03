@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import pool from "@/lib/db";
+import { searchKnowledge } from "@/lib/rag/search.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -137,6 +138,29 @@ const getAdvisorTool = {
   ],
 };
 
+
+/* ===== TOOL GET STUDENT INFO ===== */
+
+const getStudentInfoTool = {
+  functionDeclarations: [
+    {
+      name: "get_student_info",
+      description:
+        "Mengambil informasi mahasiswa berdasarkan NIM dari database kampus.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          nim: {
+            type: "STRING",
+            description:
+              "NIM mahasiswa yang ingin diketahui informasinya.",
+          },
+        },
+        required: ["nim"],
+      },
+    },
+  ],
+};
 /* ===== TOOL GET SCHEDULE ===== */
 
 const getScheduleTool = {
@@ -252,23 +276,24 @@ const createLetterTool = {
   ],
 };
 
-  /* ===== TOOL GET STUDENT INFO ===== */
+/* ===== TOOL SEARCH KNOWLEDGE ===== */
 
-const getStudentInfoTool = {
+const searchKnowledgeTool = {
   functionDeclarations: [
     {
-      name: "get_student_info",
+      name: "search_knowledge",
       description:
-        "Mengambil informasi mahasiswa berdasarkan NIM dari database kampus.",
+        "Mencari informasi dari dokumen resmi kampus seperti Peraturan Akademik. Gunakan tool ini ketika pertanyaan membutuhkan informasi yang terdapat dalam dokumen kampus.",
       parameters: {
         type: "OBJECT",
         properties: {
-          nim: {
+          query: {
             type: "STRING",
-            description: "Nomor Induk Mahasiswa (NIM) yang ingin dicari.",
+            description:
+              "Pertanyaan atau informasi yang ingin dicari dalam dokumen kampus.",
           },
         },
-        required: ["nim"],
+        required: ["query"],
       },
     },
   ],
@@ -658,17 +683,18 @@ INFORMASI SURAT:
 - Gunakan hasil create_letter sebagai sumber informasi utama untuk menjelaskan hasil kepada mahasiswa.
 `,
 
-          tools: [
-            findLocationTool,
-            findServiceTool,
-            findRoomTool,
-            checkKrsStatusTool,
-            getAdvisorTool,
-            getStudentInfoTool,
-            getScheduleTool,
-            getRoomStatusTool,
-            createLetterTool,
-          ],
+              tools: [
+        findLocationTool,
+        findServiceTool,
+        findRoomTool,
+        checkKrsStatusTool,
+        getAdvisorTool,
+        getStudentInfoTool,
+        getScheduleTool,
+        getRoomStatusTool,
+        createLetterTool,
+        searchKnowledgeTool,
+      ],
         },
 
   contents: [
@@ -1218,13 +1244,33 @@ Jawab dalam bahasa Indonesia yang jelas dan ramah.
             }
           }
         }
+/* ================================================== */
+/* ===== TOOL SEARCH KNOWLEDGE ====================== */
+/* ================================================== */
+
+else if (functionCall.name === "search_knowledge") {
+
+  const query =
+    functionCall.args?.query;
+
+  const results =
+    await searchKnowledge(query);
 
 
-      /* ================================================== */
+  toolResult = {
+    success: true,
+    data: results,
+  };
+
+}
+
+
+/* ================================================== */
 /* ===== TOOL CREATE LETTER ========================= */
 /* ================================================== */
 
 else if (functionCall.name === "create_letter") {
+
 
   const nim =
     functionCall.args?.nim;
@@ -1421,6 +1467,13 @@ Gunakan hasil tool sebagai sumber informasi utama.
 
 Jangan mengarang informasi yang tidak diberikan oleh tool.
 
+KHUSUS TOOL SEARCH_KNOWLEDGE:
+- Jika search_knowledge sudah memberikan hasil yang relevan dengan pertanyaan mahasiswa, gunakan hasil tersebut untuk menjawab.
+- Jangan memanggil search_knowledge lagi untuk pertanyaan yang sama jika hasil sebelumnya sudah relevan.
+- Jangan melakukan pencarian berulang hanya untuk mencari hasil yang lebih baik.
+- Jika hasil search_knowledge tidak menemukan informasi yang cukup untuk menjawab, katakan bahwa informasi tersebut belum tersedia dalam knowledge base.
+- Jangan mengarang jawaban untuk informasi yang tidak didukung oleh hasil search_knowledge.
+
 Jika tujuan mahasiswa masih membutuhkan tool lain,
 gunakan tool yang sesuai.
 
@@ -1444,17 +1497,18 @@ Untuk pembuatan surat:
 Jawab dengan bahasa Indonesia yang jelas dan ramah.
 `,
 
-            tools: [
-              findLocationTool,
-              findServiceTool,
-              findRoomTool,
-              checkKrsStatusTool,
-              getAdvisorTool,
-              getStudentInfoTool,
-              getScheduleTool,
-              getRoomStatusTool,
-              createLetterTool,
-            ],
+          tools: [
+  findLocationTool,
+  findServiceTool,
+  findRoomTool,
+  checkKrsStatusTool,
+  getAdvisorTool,
+  getStudentInfoTool,
+  getScheduleTool,
+  getRoomStatusTool,
+  createLetterTool,
+  searchKnowledgeTool,
+],
           },
 
           contents: [
@@ -1487,18 +1541,20 @@ Jawab dengan bahasa Indonesia yang jelas dan ramah.
 
               /* ===== HASIL TOOL TERBARU ===== */
 
-              {
-                role: "user",
-                parts: [
-                  {
-                    functionResponse: {
-                      id: functionCall.id,
-                      name: functionCall.name,
-                      response: toolResult,
+                          {
+                  role: "user",
+                  parts: [
+                    {
+                      functionResponse: {
+                        id: functionCall.id,
+                        name: functionCall.name,
+                        response: {
+                          result: toolResult,
+                        },
+                      },
                     },
-                  },
-                ],
-              },
+                  ],
+                },
 
             ],
         });
