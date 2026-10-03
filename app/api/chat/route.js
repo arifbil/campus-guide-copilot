@@ -316,7 +316,8 @@ async function generateWithRetry(
         alasan,
         isi_surat,
       } = pendingLetter;
-
+       
+      console.log("PENDING LETTER SAAT KONFIRMASI:", pendingLetter);
 
       /* ===== CARI DATA MAHASISWA ===== */
 
@@ -433,7 +434,21 @@ const isLetterRequest =
 
 const isLetterReason =
   !isLetterRequest &&
-  /beasiswa|krs|aktif|keperluan|pengajuan/i.test(message);
+  /beasiswa|surat aktif|keperluan surat|pengajuan surat|terlambat.*krs|telat.*krs/i.test(
+    message
+  );
+
+  const previousLetterRequest = messages.some(
+  (msg) =>
+    msg.role === "user" &&
+    /surat/i.test(msg.text || "")
+);
+
+const shouldCreateLetterDraft =
+  isLetterReason &&
+  previousLetterRequest &&
+  confirmed !== true &&
+  !pendingLetter;
 
 if (
   isLetterRequest &&
@@ -448,6 +463,97 @@ if (
   };
 }
 
+    /* ===== LANJUTAN WORKFLOW SURAT ===== */
+
+        console.log("WORKFLOW SURAT:", {
+      isLetterReason,
+      previousLetterRequest,
+      shouldCreateLetterDraft,
+      message,
+      messages,
+    });
+
+if (shouldCreateLetterDraft) {
+  const draftReason = message.trim();
+
+  console.log("NIM UNTUK SURAT:", nim);
+
+  const studentResult = await pool.query(
+  `
+  SELECT
+    students.nim,
+    students.nama,
+    students.prodi,
+    students.semester,
+    students.dosen_wali_id,
+    lecturers.nama AS dosen_wali
+  FROM students
+  LEFT JOIN lecturers
+    ON students.dosen_wali_id = lecturers.id
+  WHERE students.nim = $1
+  LIMIT 1;
+  `,
+  [nim]
+);
+
+
+
+      const student = studentResult.rows[0];
+
+      console.log("DATA MAHASISWA SURAT:", student);
+
+      if (!student) {
+        return {
+          text: "Maaf, data mahasiswa tidak ditemukan.",
+          preview: false,
+          pendingLetter: null,
+        };
+      }
+
+      const jenisSurat = "Surat Permohonan Keterlambatan Pengisian KRS";
+
+      const isiSurat = `
+      Dengan hormat,
+
+      Saya yang bertanda tangan di bawah ini:
+
+      NIM: ${student.nim}
+      Nama: ${student.nama}
+      Program Studi: ${student.prodi}
+      Semester: ${student.semester}
+
+      dengan ini mengajukan permohonan terkait keterlambatan melakukan pengisian KRS.
+
+      Demikian permohonan ini saya sampaikan. Atas perhatian dan pertimbangannya, saya ucapkan terima kasih.
+
+      Hormat saya,
+      ${student.nama}
+      `.trim();
+
+            return {
+        text: `Berikut draft surat berdasarkan alasan yang kamu berikan:
+
+      **Jenis Surat:** ${jenisSurat}
+
+      **Alasan:**
+      "${draftReason}"
+
+      **Isi Surat:**
+
+      ${isiSurat}
+
+      Silakan periksa draft tersebut. Jika sudah sesuai, kamu bisa mengonfirmasi untuk menyimpannya.`,
+        preview: true,
+        pendingLetter: {
+          nim: student.nim,
+          jenis_surat: jenisSurat,
+          alasan: draftReason,
+          isi_surat: isiSurat,
+        },
+      };
+    }
+
+     
       /* ===== REQUEST AWAL KE GEMINI ===== */
 
       let response = await ai.models.generateContent({
@@ -584,6 +690,9 @@ INFORMASI SURAT:
 
       /* ===== LOOP MULTI-STEP TOOL ===== */
 
+      const toolHistory = [];
+      const toolResultsHistory = [];
+
       for (let toolStep = 0; toolStep < 10; toolStep++) {
 
         console.log(
@@ -606,15 +715,93 @@ INFORMASI SURAT:
           );
 
           return response;
+          }
+
+
+              /* ===== CEK NAMA TOOL ===== */
+
+              console.log(
+                "Gemini memanggil tool:",
+                functionCall.name
+              );
+
+              toolHistory.push(functionCall.name);
+
+              if (toolHistory.length >= 3) {
+        const lastThreeTools = toolHistory.slice(-3);
+
+        if (
+          lastThreeTools[0] === lastThreeTools[1] &&
+          lastThreeTools[1] === lastThreeTools[2]
+        ) {
+          console.log(
+            "Agent menghentikan loop tool:",
+            functionCall.name
+          );
+
+          return {
+            text: "Maaf, saya tidak dapat menyelesaikan permintaan tersebut.",
+          };
         }
+      }
+
+                if (toolHistory.length >= 4) {
+  const lastFourTools = toolHistory.slice(-4);
+
+  if (
+    lastFourTools[0] === lastFourTools[2] &&
+    lastFourTools[1] === lastFourTools[3] &&
+    lastFourTools[0] !== lastFourTools[1]
+  ) {
+    console.log(
+      "Agent menghentikan pola tool berulang:",
+      lastFourTools
+    );
+
+    // Tempatkan kode fallback Gemini DI SINI
+    response = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      config: {
+        systemInstruction: `
+Kamu adalah Campus Guide Copilot.
+
+Agent sudah memperoleh hasil dari beberapa tool.
+
+Jangan memanggil tool lagi.
+Gunakan hasil tool yang sudah tersedia untuk menjawab pertanyaan user.
+Gabungkan semua informasi yang relevan menjadi satu jawaban.
+Jangan mengarang informasi.
+
+Jawab dalam bahasa Indonesia yang jelas dan ramah.
+`,
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: message,
+            },
+          ],
+        },
+        {
+          role: "user",
+          parts: [
+            {
+              text: JSON.stringify(toolResultsHistory),
+            },
+          ],
+        },
+      ],
+    });
+
+    return response;
+  }
+
+}
 
 
-        /* ===== CEK NAMA TOOL ===== */
 
-        console.log(
-          "Gemini memanggil tool:",
-          functionCall.name
-        );
 
 
         let toolResult;
@@ -1216,6 +1403,11 @@ Apakah Anda ingin menyimpan draft surat ini?
         /* ================================================== */
         /* ===== KIRIM HASIL TOOL KEMBALI KE GEMINI ========= */
         /* ================================================== */
+        toolResultsHistory.push({
+        tool: functionCall.name,
+        result: toolResult,
+      });
+
 
         response = await ai.models.generateContent({
 
@@ -1267,37 +1459,48 @@ Jawab dengan bahasa Indonesia yang jelas dan ramah.
 
           contents: [
 
-            /* ===== PESAN USER ASLI ===== */
+              /* ===== PESAN USER ASLI ===== */
 
-            {
-              role: "user",
-              parts: [
-                {
-                  text: message,
-                },
-              ],
-            },
-
-            /* ===== RESPONSE GEMINI SEBELUM TOOL ===== */
-
-            response.candidates[0].content,
-
-            /* ===== HASIL TOOL ===== */
-
-            {
-              role: "user",
-              parts: [
-                {
-                  functionResponse: {
-                    id: functionCall.id,
-                    name: functionCall.name,
-                    response: toolResult,
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: message,
                   },
-                },
-              ],
-            },
+                ],
+              },
 
-          ],
+              /* ===== HASIL TOOL YANG SUDAH DIJALANKAN ===== */
+
+              ...toolResultsHistory.map((item) => ({
+                role: "user",
+                parts: [
+                  {
+                    text: `Hasil tool ${item.tool}:\n${JSON.stringify(item.result)}`,
+                  },
+                ],
+              })),
+
+              /* ===== RESPONSE GEMINI SEBELUM TOOL ===== */
+
+              response.candidates[0].content,
+
+              /* ===== HASIL TOOL TERBARU ===== */
+
+              {
+                role: "user",
+                parts: [
+                  {
+                    functionResponse: {
+                      id: functionCall.id,
+                      name: functionCall.name,
+                      response: toolResult,
+                    },
+                  },
+                ],
+              },
+
+            ],
         });
 
       }
