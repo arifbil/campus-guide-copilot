@@ -306,6 +306,97 @@ function sleep(ms) {
 }
 
 
+/* ===== VALIDASI PARAMETER TOOL ===== */
+
+function validateToolArguments(toolName, args) {
+  const rules = {
+    find_location: {
+      nama: "string",
+    },
+    find_service: {
+      nama: "string",
+    },
+    find_room: {
+      nama: "string",
+    },
+    check_krs_status: {
+      nim: "string",
+    },
+    get_advisor: {
+      nim: "string",
+    },
+    get_student_info: {
+      nim: "string",
+    },
+    get_schedule: {
+      hari: "string",
+    },
+    get_room_status: {
+      room: "string",
+      hari: "string",
+      jam: "string",
+    },
+    create_letter: {
+      nim: "string",
+      jenis_surat: "string",
+      alasan: "string",
+      isi_surat: "string",
+      konfirmasi: "boolean",
+    },
+    search_knowledge: {
+      query: "string",
+    },
+  };
+
+  const toolRules = rules[toolName];
+
+  if (!toolRules) {
+    return {
+      valid: false,
+      error: `Tool tidak dikenal: ${toolName}`,
+    };
+  }
+
+  if (!args || typeof args !== "object") {
+    return {
+      valid: false,
+      error: `Parameter untuk tool ${toolName} tidak valid.`,
+    };
+  }
+
+  for (const [name, type] of Object.entries(toolRules)) {
+    const value = args[name];
+
+    if (value === undefined || value === null) {
+      return {
+        valid: false,
+        error: `Parameter "${name}" wajib diisi.`,
+      };
+    }
+
+    if (typeof value !== type) {
+      return {
+        valid: false,
+        error: `Parameter "${name}" harus bertipe ${type}.`,
+      };
+    }
+
+    if (type === "string" && value.trim() === "") {
+      return {
+        valid: false,
+        error: `Parameter "${name}" tidak boleh kosong.`,
+      };
+    }
+  }
+
+  return {
+    valid: true,
+  };
+}
+
+
+
+
 /* ===== FUNGSI GEMINI DENGAN TOOL CALLING ===== */
 
 async function generateWithRetry(
@@ -734,22 +825,41 @@ INFORMASI SURAT:
 
         /* ===== JIKA TIDAK ADA TOOL CALL ===== */
 
-        if (!functionCall) {
+       if (!functionCall) {
 
-          console.log(
-            "Gemini memberikan jawaban akhir."
-          );
+  console.log(
+    "Gemini memberikan jawaban akhir."
+  );
 
-          return response;
-          }
+  return response;
+}
 
 
-              /* ===== CEK NAMA TOOL ===== */
+/* ===== VALIDASI PARAMETER TOOL ===== */
 
-              console.log(
-                "Gemini memanggil tool:",
-                functionCall.name
-              );
+const toolValidation = validateToolArguments(
+  functionCall.name,
+  functionCall.args
+);
+
+if (!toolValidation.valid) {
+  console.error(
+    "Parameter tool tidak valid:",
+    toolValidation.error
+  );
+
+  return {
+    text: `Maaf, parameter untuk proses tersebut tidak valid. ${toolValidation.error}`,
+  };
+}
+
+
+/* ===== CEK NAMA TOOL ===== */
+
+console.log(
+  "Gemini memanggil tool:",
+  functionCall.name
+);
 
               toolHistory.push(functionCall.name);
 
@@ -1614,14 +1724,88 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    const message = body.message;
+   const message =
+  typeof body.message === "string"
+    ? body.message.trim()
+    : "";
 
-    const messages =
-  Array.isArray(body.messages)
-    ? body.messages
-    : [];
-    
-    const nim = body.nim || null;
+if (!message) {
+  return Response.json(
+    {
+      error: "Pesan tidak boleh kosong.",
+    },
+    { status: 400 }
+  );
+}
+
+if (message.length > 2000) {
+  return Response.json(
+    {
+      error: "Pesan terlalu panjang. Maksimal 2000 karakter.",
+    },
+    { status: 400 }
+  );
+}
+
+   const messages = body.messages;
+
+if (!Array.isArray(messages)) {
+  return Response.json(
+    {
+      error: "Format messages tidak valid.",
+    },
+    { status: 400 }
+  );
+}
+
+if (messages.length > 50) {
+  return Response.json(
+    {
+      error: "Terlalu banyak riwayat pesan. Maksimal 50 pesan.",
+    },
+    { status: 400 }
+  );
+}
+
+for (const msg of messages) {
+  if (!msg || typeof msg !== "object") {
+    return Response.json(
+      {
+        error: "Format riwayat pesan tidak valid.",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (msg.role !== "user" && msg.role !== "assistant") {
+    return Response.json(
+      {
+        error: "Role pesan tidak valid.",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (typeof msg.text !== "string") {
+    return Response.json(
+      {
+        error: "Isi pesan tidak valid.",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (msg.text.length > 2000) {
+    return Response.json(
+      {
+        error: "Isi riwayat pesan terlalu panjang.",
+      },
+      { status: 400 }
+    );
+  }
+}
+
+const nim = body.nim || null;
 
     const confirmed =
       body.confirmed === true;
