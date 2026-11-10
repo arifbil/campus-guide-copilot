@@ -1,3 +1,4 @@
+require("dotenv").config({ path: ".env.local" });
 const fs = require("fs");
 const { PDFParse } = require("pdf-parse");
 const { Pool } = require("pg");
@@ -5,11 +6,11 @@ const { Pool } = require("pg");
 const pdfPath = "./knowledge/akademik/PD_PERATURAN-AKADEMIK-2024.pdf";
 
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "campus_guide",
-  password: "arif555provsql",
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT || 5432),
 });
 
 async function main() {
@@ -53,7 +54,7 @@ async function main() {
         INSERT INTO knowledge_chunks (pasal, source, content)
         VALUES ($1, $2, $3)
         `,
-        [chunk.pasal, chunk.source, chunk.content]
+        [chunk.pasal, chunk.source, chunk.content],
       );
     }
 

@@ -12,11 +12,11 @@ async function main() {
     contents: "Pasal 1 Peraturan Akademik Politeknik Negeri Tanah Laut",
   });
 
-const values = result.embeddings[0].values;
+  const values = result.embeddings[0].values;
 
-console.log("Embedding berhasil");
-console.log("Jumlah dimensi:", values.length);
-console.log("5 nilai pertama:", values.slice(0, 5));
+  console.log("Embedding berhasil");
+  console.log("Jumlah dimensi:", values.length);
+  console.log("5 nilai pertama:", values.slice(0, 5));
 }
 
 main().catch((error) => {

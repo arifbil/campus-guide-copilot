@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
       WHERE rooms.id = $1
       ORDER BY schedules.hari, schedules.mulai;
       `,
-      [id]
+      [id],
     );
 
     return Response.json(result.rows);
@@ -37,7 +37,7 @@ export async function GET(request, { params }) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

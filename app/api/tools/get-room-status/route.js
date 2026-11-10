@@ -4,7 +4,6 @@ import pool from "@/lib/db";
 
 export async function GET(request) {
   try {
-
     /* ===== AMBIL PARAMETER ===== */
 
     const { searchParams } = new URL(request.url);
@@ -23,7 +22,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -41,7 +40,7 @@ export async function GET(request) {
       ORDER BY id
       LIMIT 1;
       `,
-      [`%${room}%`]
+      [`%${room}%`],
     );
 
     /* ===== RUANGAN TIDAK DITEMUKAN ===== */
@@ -73,7 +72,7 @@ export async function GET(request) {
       ORDER BY schedules.mulai ASC
       LIMIT 1;
       `,
-      [roomData.id, hari, jam]
+      [roomData.id, hari, jam],
     );
 
     /* ===== RUANGAN SEDANG DIGUNAKAN ===== */
@@ -95,9 +94,7 @@ export async function GET(request) {
       ruangan: roomData,
       jadwal: null,
     });
-
   } catch (error) {
-
     console.error("Get Room Status Error:", error);
 
     return Response.json(
@@ -107,7 +104,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

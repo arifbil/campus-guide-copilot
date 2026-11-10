@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  CircleMarker,
-  Popup,
-} from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 
 /* ===== KOMPONEN CAMPUS MAP ===== */
 
 export default function CampusMap() {
-
   /* ===== STATE DATA LOKASI ===== */
 
   const [locations, setLocations] = useState([]);
@@ -37,14 +31,12 @@ export default function CampusMap() {
 
   return (
     <div className="overflow-hidden rounded-2xl">
-
       <MapContainer
         center={[-3.8005, 114.8005]}
         zoom={16}
         scrollWheelZoom={true}
         className="h-[500px] w-full"
       >
-
         {/* ===== SUMBER PETA OPENSTREETMAP ===== */}
 
         <TileLayer
@@ -55,22 +47,15 @@ export default function CampusMap() {
         {/* ===== MARKER LOKASI ===== */}
 
         {locations.map((location) => (
-
           <CircleMarker
             key={location.id}
-            center={[
-              Number(location.latitude),
-              Number(location.longitude),
-            ]}
+            center={[Number(location.latitude), Number(location.longitude)]}
             radius={10}
           >
-
             {/* ===== INFORMASI MARKER ===== */}
 
             <Popup>
-
               <div className="min-w-[180px] p-1">
-
                 {/* ===== NAMA LOKASI ===== */}
 
                 <h3 className="text-base font-bold text-slate-900">
@@ -88,21 +73,14 @@ export default function CampusMap() {
                 <p className="mt-1 text-xs text-slate-500">
                   Koordinat:
                   <br />
-                  {Number(location.latitude).toFixed(6)},
-                  {" "}
+                  {Number(location.latitude).toFixed(6)},{" "}
                   {Number(location.longitude).toFixed(6)}
                 </p>
-
               </div>
-
             </Popup>
-
           </CircleMarker>
-
         ))}
-
       </MapContainer>
-
     </div>
   );
 }

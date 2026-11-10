@@ -46,7 +46,7 @@ export async function GET(request, { params }) {
         AND $3::time >= schedules.mulai
         AND $3::time < schedules.selesai;
       `,
-      [id, hariWITA, waktuWITA]
+      [id, hariWITA, waktuWITA],
     );
 
     /* ===== CEK STATUS RUANGAN ===== */
@@ -79,7 +79,7 @@ export async function GET(request, { params }) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

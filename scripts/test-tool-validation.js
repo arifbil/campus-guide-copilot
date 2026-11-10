@@ -58,24 +58,24 @@ console.log(
   "Test valid:",
   validateToolArguments("find_location", {
     nama: "Gedung GTI",
-  })
+  }),
 );
 
 console.log(
   "Test parameter kosong:",
   validateToolArguments("find_location", {
     nama: "",
-  })
+  }),
 );
 
 console.log(
   "Test parameter hilang:",
-  validateToolArguments("find_location", {})
+  validateToolArguments("find_location", {}),
 );
 
 console.log(
   "Test tipe salah:",
   validateToolArguments("find_location", {
     nama: 123,
-  })
+  }),
 );

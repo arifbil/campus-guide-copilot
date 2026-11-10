@@ -15,7 +15,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -31,7 +31,7 @@ export async function GET(request) {
       WHERE students.nim = $1
       LIMIT 1;
       `,
-      [nim]
+      [nim],
     );
 
     if (result.rows.length === 0) {
@@ -55,7 +55,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

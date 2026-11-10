@@ -3,7 +3,6 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
-
 /* ===== GET STUDENT INFO ===== */
 
 export async function GET(request) {
@@ -18,7 +17,7 @@ export async function GET(request) {
           success: false,
           error: "NIM wajib diberikan",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,7 +36,7 @@ export async function GET(request) {
         ON s.dosen_wali_id = l.id
       WHERE s.nim = $1
       `,
-      [nim]
+      [nim],
     );
 
     // Mahasiswa tidak ditemukan
@@ -47,7 +46,7 @@ export async function GET(request) {
           success: false,
           error: "Mahasiswa dengan NIM tersebut tidak ditemukan",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -56,7 +55,6 @@ export async function GET(request) {
       success: true,
       student: result.rows[0],
     });
-
   } catch (error) {
     console.error("GET STUDENT INFO ERROR:", error);
 
@@ -65,7 +63,7 @@ export async function GET(request) {
         success: false,
         error: "Terjadi kesalahan saat mengambil data mahasiswa",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

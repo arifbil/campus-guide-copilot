@@ -8,11 +8,11 @@ const ai = new GoogleGenAI({
 });
 
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "campus_guide",
-  password: "arif555provsql",
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT || 5432),
 });
 
 async function main() {
@@ -20,7 +20,7 @@ async function main() {
 
   try {
     const result = await client.query(
-      "SELECT id, content FROM knowledge_chunks ORDER BY id"
+      "SELECT id, content FROM knowledge_chunks ORDER BY id",
     );
 
     console.log("Jumlah chunks:", result.rows.length);
@@ -39,12 +39,10 @@ async function main() {
         SET embedding = $1
         WHERE id = $2
         `,
-        [JSON.stringify(embedding), row.id]
+        [JSON.stringify(embedding), row.id],
       );
 
-      console.log(
-        `Embedding chunk ${row.id}/${result.rows.length} berhasil`
-      );
+      console.log(`Embedding chunk ${row.id}/${result.rows.length} berhasil`);
     }
 
     console.log("Semua embedding berhasil disimpan.");

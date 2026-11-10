@@ -15,7 +15,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -32,7 +32,7 @@ export async function GET(request) {
       WHERE rooms.nama ILIKE $1
       LIMIT 1;
       `,
-      [`%${nama}%`]
+      [`%${nama}%`],
     );
 
     if (result.rows.length === 0) {
@@ -56,7 +56,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

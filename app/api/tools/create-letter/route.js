@@ -4,17 +4,11 @@ import pool from "@/lib/db";
 
 export async function POST(request) {
   try {
-
     /* ===== AMBIL DATA REQUEST ===== */
 
     const body = await request.json();
 
-    const {
-      nim,
-      jenis_surat,
-      alasan,
-      isi_surat,
-    } = body;
+    const { nim, jenis_surat, alasan, isi_surat } = body;
 
     /* ===== VALIDASI DATA ===== */
 
@@ -22,12 +16,11 @@ export async function POST(request) {
       return Response.json(
         {
           success: false,
-          message:
-            "NIM, jenis surat, alasan, dan isi surat harus diisi.",
+          message: "NIM, jenis surat, alasan, dan isi surat harus diisi.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -49,7 +42,7 @@ export async function POST(request) {
       WHERE students.nim = $1
       LIMIT 1;
       `,
-      [nim]
+      [nim],
     );
 
     /* ===== MAHASISWA TIDAK DITEMUKAN ===== */
@@ -62,7 +55,7 @@ export async function POST(request) {
         },
         {
           status: 404,
-        }
+        },
       );
     }
 
@@ -91,13 +84,7 @@ export async function POST(request) {
         status,
         created_at;
       `,
-      [
-        student.id,
-        student.dosen_wali_id,
-        jenis_surat,
-        alasan,
-        isi_surat,
-      ]
+      [student.id, student.dosen_wali_id, jenis_surat, alasan, isi_surat],
     );
 
     /* ===== KEMBALIKAN HASIL ===== */
@@ -120,9 +107,7 @@ export async function POST(request) {
         dosen_wali: student.dosen_wali,
       },
     });
-
   } catch (error) {
-
     console.error("Create Letter Error:", error);
 
     return Response.json(
@@ -132,7 +117,7 @@ export async function POST(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

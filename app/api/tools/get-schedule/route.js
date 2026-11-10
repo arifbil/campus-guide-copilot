@@ -4,7 +4,6 @@ import pool from "@/lib/db";
 
 export async function GET(request) {
   try {
-
     /* ===== AMBIL HARI ===== */
 
     const { searchParams } = new URL(request.url);
@@ -20,7 +19,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -41,7 +40,7 @@ export async function GET(request) {
       WHERE LOWER(schedules.hari) = LOWER($1)
       ORDER BY schedules.mulai ASC;
       `,
-      [hari]
+      [hari],
     );
 
     /* ===== JADWAL TIDAK DITEMUKAN ===== */
@@ -62,9 +61,7 @@ export async function GET(request) {
       jumlah: result.rows.length,
       data: result.rows,
     });
-
   } catch (error) {
-
     console.error("Get Schedule Error:", error);
 
     return Response.json(
@@ -74,7 +71,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

@@ -19,7 +19,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -37,7 +37,7 @@ export async function GET(request) {
       WHERE students.nim = $1
       LIMIT 1;
       `,
-      [nim]
+      [nim],
     );
 
     /* ===== DATA TIDAK DITEMUKAN ===== */
@@ -55,9 +55,7 @@ export async function GET(request) {
       success: true,
       data: result.rows[0],
     });
-
   } catch (error) {
-
     console.error("Get Advisor Error:", error);
 
     return Response.json(
@@ -67,7 +65,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

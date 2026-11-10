@@ -6,7 +6,6 @@ import pool from "@/lib/db";
 
 export async function GET(request) {
   try {
-
     /* ===== AMBIL PARAMETER PENCARIAN ===== */
 
     const { searchParams } = new URL(request.url);
@@ -22,7 +21,7 @@ export async function GET(request) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -44,7 +43,7 @@ export async function GET(request) {
       ORDER BY id
       LIMIT 1;
       `,
-      [`%${nama}%`]
+      [`%${nama}%`],
     );
 
     /* ===== JIKA LAYANAN TIDAK DITEMUKAN ===== */
@@ -62,9 +61,7 @@ export async function GET(request) {
       success: true,
       data: result.rows[0],
     });
-
   } catch (error) {
-
     console.error("Find Service Tool Error:", error);
 
     return Response.json(
@@ -74,7 +71,7 @@ export async function GET(request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

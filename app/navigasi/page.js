@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,129 +5,118 @@ import dynamic from "next/dynamic";
 
 /* ===== LOAD CAMPUS MAP ===== */
 
-const CampusMap = dynamic(
-  () => import("./Map"),
-  {
-    ssr: false,
-  }
-);
+const CampusMap = dynamic(() => import("./Map"), {
+  ssr: false,
+});
 
 export default function NavigasiPage() {
+  {
+    /* ===== STATE DATA RUANGAN ===== */
+  }
 
-        {/* ===== STATE DATA RUANGAN ===== */}
+  const [rooms, setRooms] = useState([]);
 
-        const [rooms, setRooms] = useState([]);
-        
-        /* ===== STATE PENCARIAN ===== */
+  /* ===== STATE PENCARIAN ===== */
 
-        const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
 
-        /* ===== STATE RUANGAN TERPILIH ===== */
+  /* ===== STATE RUANGAN TERPILIH ===== */
 
-        const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
-        /* ===== STATE STATUS RUANGAN ===== */
+  /* ===== STATE STATUS RUANGAN ===== */
 
-        const [roomStatus, setRoomStatus] = useState(null);
+  const [roomStatus, setRoomStatus] = useState(null);
 
-        /* ===== REFERENSI DETAIL LOKASI ===== */
+  /* ===== REFERENSI DETAIL LOKASI ===== */
 
-        const detailLocationRef = useRef(null);
+  const detailLocationRef = useRef(null);
 
+  {
+    /* ===== AMBIL DATA RUANGAN ===== */
+  }
 
-        {/* ===== AMBIL DATA RUANGAN ===== */}
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch("/api/rooms");
+        const data = await response.json();
 
-        useEffect(() => {
-          const fetchRooms = async () => {
-            try {
-              const response = await fetch("/api/rooms");
-              const data = await response.json();
+        setRooms(data);
+      } catch (error) {
+        console.error("Gagal mengambil data ruangan:", error);
+      }
+    };
 
-              setRooms(data);
-            } catch (error) {
-              console.error("Gagal mengambil data ruangan:", error);
-            }
-          };
+    fetchRooms();
+  }, []);
 
-          fetchRooms();
-        }, []);
+  /* ===== AMBIL STATUS REAL-TIME RUANGAN ===== */
 
-       /* ===== AMBIL STATUS REAL-TIME RUANGAN ===== */
+  useEffect(() => {
+    if (!selectedRoom) {
+      setRoomStatus(null);
+      return;
+    }
 
-          useEffect(() => {
-            if (!selectedRoom) {
-              setRoomStatus(null);
-              return;
-            }
+    const fetchRoomStatus = async () => {
+      try {
+        const response = await fetch(`/api/rooms/${selectedRoom.id}/status`);
 
-            const fetchRoomStatus = async () => {
-              try {
-                const response = await fetch(
-                  `/api/rooms/${selectedRoom.id}/status`
-                );
+        const data = await response.json();
 
-                const data = await response.json();
+        setRoomStatus(data);
+      } catch (error) {
+        console.error("Gagal mengambil status ruangan:", error);
+      }
+    };
 
-                setRoomStatus(data);
-              } catch (error) {
-                console.error("Gagal mengambil status ruangan:", error);
-              }
-            };
+    /* ===== CEK STATUS SAAT RUANGAN DIPILIH ===== */
 
-            /* ===== CEK STATUS SAAT RUANGAN DIPILIH ===== */
+    fetchRoomStatus();
 
-            fetchRoomStatus();
+    /* ===== CEK ULANG SETIAP 1 MENIT ===== */
 
-            /* ===== CEK ULANG SETIAP 1 MENIT ===== */
+    const interval = setInterval(() => {
+      fetchRoomStatus();
+    }, 60000);
 
-            const interval = setInterval(() => {
-              fetchRoomStatus();
-            }, 60000);
+    /* ===== HENTIKAN INTERVAL ===== */
 
-            /* ===== HENTIKAN INTERVAL ===== */
+    return () => clearInterval(interval);
+  }, [selectedRoom]);
 
-            return () => clearInterval(interval);
+  /* ===== AUTO SCROLL KE DETAIL LOKASI ===== */
 
-          }, [selectedRoom]);
-
-
-          /* ===== AUTO SCROLL KE DETAIL LOKASI ===== */
-
-          useEffect(() => {
-            if (selectedRoom && detailLocationRef.current) {
-              detailLocationRef.current.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }
-          }, [selectedRoom]);
-
-
+  useEffect(() => {
+    if (selectedRoom && detailLocationRef.current) {
+      detailLocationRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selectedRoom]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-4xl">
-
         {/* ===== HEADER NAVIGASI ===== */}
         <header className="mb-10">
           <p className="mb-2 text-sm font-semibold text-blue-600">
             CAMPUS GUIDE COPILOT
           </p>
 
-          <h1 className="text-4xl font-bold text-slate-900">
-            Navigasi Kampus
-          </h1>
+          <h1 className="text-4xl font-bold text-slate-900">Navigasi Kampus</h1>
 
           <p className="mt-3 text-slate-600">
-            Temukan gedung, ruangan, fasilitas, dan lokasi penting
-            di lingkungan kampus.
+            Temukan gedung, ruangan, fasilitas, dan lokasi penting di lingkungan
+            kampus.
           </p>
         </header>
 
-      {/* ===== CAMPUS MAP ===== */}
+        {/* ===== CAMPUS MAP ===== */}
 
         <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
-
           <h2 className="text-xl font-semibold text-slate-900">
             🗺️ Campus Map
           </h2>
@@ -140,12 +128,10 @@ export default function NavigasiPage() {
           <div className="mt-4">
             <CampusMap />
           </div>
-
         </section>
 
         {/* ===== PENCARIAN RUANGAN ===== */}
         <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
-
           {/* ===== JUDUL PENCARIAN ===== */}
           <h2 className="text-xl font-semibold text-slate-900">
             🔎 Cari Ruangan
@@ -153,13 +139,13 @@ export default function NavigasiPage() {
 
           {/* ===== INPUT PENCARIAN ===== */}
           <div className="mt-4 flex gap-3">
-           <input
-            type="text"
-            placeholder="Contoh: Lab Elektro"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
-          />
+            <input
+              type="text"
+              placeholder="Contoh: Lab Elektro"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+            />
 
             <button
               onClick={() => setSearch(search)}
@@ -171,178 +157,145 @@ export default function NavigasiPage() {
         </section>
 
         {/* ===== HASIL DATA RUANGAN ===== */}
-      <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+        <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-900">
+            📍 Daftar Ruangan
+          </h2>
 
-        <h2 className="text-xl font-semibold text-slate-900">
-          📍 Daftar Ruangan
-        </h2>
-
-        <div className="mt-4 space-y-4">
-
-          {rooms.length > 0 ? (
+          <div className="mt-4 space-y-4">
+            {rooms.length > 0 ? (
               rooms
                 .filter((room) =>
                   room.nama_ruangan
                     .toLowerCase()
-                    .includes(search.toLowerCase())
+                    .includes(search.toLowerCase()),
                 )
-                  .map((room) => (
-              /* ===== KARTU RUANGAN ===== */
-              <div
-                key={room.id}
-                className="rounded-xl border border-slate-200 p-4 transition-all duration-200 hover:shadow-md"
-              >
+                .map((room) => (
+                  /* ===== KARTU RUANGAN ===== */
+                  <div
+                    key={room.id}
+                    className="rounded-xl border border-slate-200 p-4 transition-all duration-200 hover:shadow-md"
+                  >
+                    <h3 className="font-semibold text-slate-900">
+                      {room.nama_ruangan}
+                    </h3>
 
-                <h3 className="font-semibold text-slate-900">
-                  {room.nama_ruangan}
-                </h3>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {room.nama_gedung}
+                    </p>
 
-                <p className="mt-2 text-sm text-slate-600">
-                  {room.nama_gedung}
-                </p>
+                    <p className="text-sm text-slate-600">
+                      Lantai {room.lantai}
+                    </p>
 
-                <p className="text-sm text-slate-600">
-                  Lantai {room.lantai}
-                </p>
+                    <button
+                      onClick={() => setSelectedRoom(room)}
+                      className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                    >
+                      Lihat Rute
+                    </button>
+                  </div>
+                ))
+            ) : (
+              <p className="text-slate-500">Memuat data ruangan...</p>
+            )}
+          </div>
+        </section>
 
-               <button
-                  onClick={() => setSelectedRoom(room)}
-                  className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-                >
-                  Lihat Rute
-                </button>
+        {/* ===== DETAIL RUTE ===== */}
 
-              </div>
-            ))
-          ) : (
-            <p className="text-slate-500">
-              Memuat data ruangan...
-            </p>
-          )}
-
-        </div>
-      </section>
-
-          {/* ===== DETAIL RUTE ===== */}
-
-         {selectedRoom && (
+        {selectedRoom && (
           <section
             ref={detailLocationRef}
             className="mb-6 rounded-2xl bg-white p-6 shadow-sm"
           >
+            <h2 className="text-xl font-semibold text-slate-900">
+              🧭 Detail Lokasi
+            </h2>
 
-              <h2 className="text-xl font-semibold text-slate-900">
-                🧭 Detail Lokasi
-              </h2>
+            <div className="mt-4 rounded-xl border border-slate-200 p-4">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {selectedRoom.nama_ruangan}
+              </h3>
+
+              <p className="mt-2 text-slate-600">
+                📍 {selectedRoom.nama_gedung}
+              </p>
+
+              <p className="text-slate-600">🏢 Lantai {selectedRoom.lantai}</p>
+
+              {/* ===== STATUS RUANGAN ===== */}
 
               <div className="mt-4 rounded-xl border border-slate-200 p-4">
+                <h3 className="font-semibold text-slate-900">Status Ruangan</h3>
 
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {selectedRoom.nama_ruangan}
-                </h3>
+                {roomStatus ? (
+                  <div className="mt-3">
+                    {roomStatus.status === "digunakan" ? (
+                      <div className="rounded-xl bg-red-50 p-4 text-red-800">
+                        <p className="font-semibold">🔴 Sedang digunakan</p>
 
-                <p className="mt-2 text-slate-600">
-                  📍 {selectedRoom.nama_gedung}
-                </p>
+                        <p className="mt-1 text-sm">{roomStatus.kegiatan}</p>
 
-                <p className="text-slate-600">
-                  🏢 Lantai {selectedRoom.lantai}
-                </p>
+                        <p className="mt-1 text-sm">
+                          {roomStatus.mulai} - {roomStatus.selesai}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-green-50 p-4 text-green-800">
+                        <p className="font-semibold">🟢 Tersedia</p>
 
-                {/* ===== STATUS RUANGAN ===== */}
+                        <p className="mt-1 text-sm">
+                          Tidak ada kegiatan yang sedang berlangsung.
+                        </p>
+                      </div>
+                    )}
 
-                <div className="mt-4 rounded-xl border border-slate-200 p-4">
-                  <h3 className="font-semibold text-slate-900">
-                    Status Ruangan
-                  </h3>
-
-                  {roomStatus ? (
-                    <div className="mt-3">
-                      {roomStatus.status === "digunakan" ? (
-                        <div className="rounded-xl bg-red-50 p-4 text-red-800">
-                          <p className="font-semibold">
-                            🔴 Sedang digunakan
-                          </p>
-
-                          <p className="mt-1 text-sm">
-                            {roomStatus.kegiatan}
-                          </p>
-
-                          <p className="mt-1 text-sm">
-                            {roomStatus.mulai} - {roomStatus.selesai}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="rounded-xl bg-green-50 p-4 text-green-800">
-                          <p className="font-semibold">
-                            🟢 Tersedia
-                          </p>
-
-                          <p className="mt-1 text-sm">
-                            Tidak ada kegiatan yang sedang berlangsung.
-                          </p>
-                        </div>
-                      )}
-
-                      <p className="mt-3 text-xs text-slate-500">
-                        🕐 Waktu: {roomStatus.hari}, {roomStatus.waktu} WITA
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-sm text-slate-500">
-                      Memuat status ruangan...
+                    <p className="mt-3 text-xs text-slate-500">
+                      🕐 Waktu: {roomStatus.hari}, {roomStatus.waktu} WITA
                     </p>
-                  )}
-                </div>
-
-                <div className="mt-4 rounded-xl bg-blue-50 p-4 text-blue-800">
-                  🧭 Rute menuju {selectedRoom.nama_ruangan} akan
-                  ditampilkan di sini.
-                </div>
-
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-500">
+                    Memuat status ruangan...
+                  </p>
+                )}
               </div>
-            </section>
-          )}
+
+              <div className="mt-4 rounded-xl bg-blue-50 p-4 text-blue-800">
+                🧭 Rute menuju {selectedRoom.nama_ruangan} akan ditampilkan di
+                sini.
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ===== FASILITAS KAMPUS ===== */}
         <section className="rounded-2xl bg-white p-6 shadow-sm">
-
           <h2 className="text-xl font-semibold text-slate-900">
             🏫 Fasilitas Kampus
           </h2>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-
             {/* ===== FASILITAS PERPUSTAKAAN ===== */}
             <div className="rounded-xl border border-slate-200 p-4 transition-all duration-200 hover:scale-105 hover:shadow-md">
-
-              <h3 className="font-semibold text-slate-900">
-                📚 Perpustakaan
-              </h3>
+              <h3 className="font-semibold text-slate-900">📚 Perpustakaan</h3>
 
               <p className="mt-2 text-sm text-slate-600">
                 Tempat membaca dan mencari referensi akademik.
               </p>
-
             </div>
-
 
             {/* ===== FASILITAS LABORATORIUM ===== */}
             <div className="rounded-xl border border-slate-200 p-4 transition-all duration-200 hover:scale-105 hover:shadow-md">
-
-              <h3 className="font-semibold text-slate-900">
-                🧪 Laboratorium
-              </h3>
+              <h3 className="font-semibold text-slate-900">🧪 Laboratorium</h3>
 
               <p className="mt-2 text-sm text-slate-600">
                 Laboratorium untuk kegiatan praktikum mahasiswa.
               </p>
-
             </div>
-
           </div>
         </section>
-
       </div>
     </main>
   );

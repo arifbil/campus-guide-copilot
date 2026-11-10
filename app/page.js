@@ -13,10 +13,10 @@ export default function Home() {
   const messagesEndRef = useRef(null);
 
   /* ===== DATA MAHASISWA AKTIF ===== */
-const student = {
-  nim: "2301001",
-  nama: "Arif",
-};
+  const student = {
+    nim: "2301001",
+    nama: "Arif",
+  };
 
   /* ===== SUGGESTION CHIPS ===== */
   const suggestions = [
@@ -59,13 +59,13 @@ const student = {
       const lowerInput = messageText.toLowerCase().trim();
       const isConfirmation = Boolean(
         pendingLetter &&
-          (lowerInput === "ya" ||
-            lowerInput === "iya" ||
-            lowerInput === "iyaa" ||
-            lowerInput === "ya, simpan" ||
-            lowerInput === "iya, simpan" ||
-            lowerInput === "setuju" ||
-            lowerInput === "simpan")
+        (lowerInput === "ya" ||
+          lowerInput === "iya" ||
+          lowerInput === "iyaa" ||
+          lowerInput === "ya, simpan" ||
+          lowerInput === "iya, simpan" ||
+          lowerInput === "setuju" ||
+          lowerInput === "simpan"),
       );
 
       const response = await fetch("/api/chat", {
@@ -121,10 +121,11 @@ const student = {
               NAVIPUS
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-950 via-indigo-900 to-red-600 bg-clip-text text-transparent md:text-4xl">
-            Your AI Companion for Campus Life
+              Your AI Companion for Campus Life
             </h1>
             <p className="mt-2 text-sm text-slate-600 md:text-base">
-              Asisten AI untuk membantu mahasiswa menemukan informasi akademik, lokasi kampus, dan layanan mahasiswa.
+              Asisten AI untuk membantu mahasiswa menemukan informasi akademik,
+              lokasi kampus, dan layanan mahasiswa.
             </p>
           </div>
           <Image
@@ -176,7 +177,8 @@ const student = {
           <div className="mt-4 flex max-h-[450px] min-h-[250px] flex-col gap-4 overflow-y-auto rounded-2xl bg-blue-50/30 p-4 border border-blue-100/60 shadow-inner">
             {messages.length === 0 && (
               <div className="my-auto text-center text-slate-400 text-sm">
-                Belum ada percakapan. Ketik pesan atau pilih topik rekomendasi di bawah!
+                Belum ada percakapan. Ketik pesan atau pilih topik rekomendasi
+                di bawah!
               </div>
             )}
 
@@ -237,7 +239,9 @@ const student = {
                     <div className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce"></div>
                     <div className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:-0.15s]"></div>
                     <div className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:-0.3s]"></div>
-                    <span className="ml-1 text-xs text-slate-400 font-medium">Sedang mengetik...</span>
+                    <span className="ml-1 text-xs text-slate-400 font-medium">
+                      Sedang mengetik...
+                    </span>
                   </div>
                 </div>
               </div>
@@ -309,7 +313,9 @@ const student = {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-xs">
                   🗺️
                 </div>
-                <h3 className="mt-3 font-bold text-slate-900">Navigasi Kampus</h3>
+                <h3 className="mt-3 font-bold text-slate-900">
+                  Navigasi Kampus
+                </h3>
                 <p className="mt-1 text-xs text-slate-500 leading-relaxed">
                   Cari ruangan, gedung, fasilitas, dan peta kampus.
                 </p>
@@ -321,7 +327,9 @@ const student = {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all duration-300 shadow-xs">
                   🏢
                 </div>
-                <h3 className="mt-3 font-bold text-slate-900">Layanan Mahasiswa</h3>
+                <h3 className="mt-3 font-bold text-slate-900">
+                  Layanan Mahasiswa
+                </h3>
                 <p className="mt-1 text-xs text-slate-500 leading-relaxed">
                   Informasi beasiswa, surat kelakuan baik, dan layanan kampus.
                 </p>

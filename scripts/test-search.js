@@ -3,8 +3,7 @@ require("dotenv").config({ path: ".env.local" });
 const { searchKnowledge } = require("../lib/rag/search.js");
 
 async function main() {
-  const query =
-    "Berapa minimal IPK untuk mendapatkan ijazah?";
+  const query = "Berapa minimal IPK untuk mendapatkan ijazah?";
 
   const results = await searchKnowledge(query, 5);
 
